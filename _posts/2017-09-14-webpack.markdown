@@ -1,0 +1,13 @@
+---
+layout:     post
+title:      "webpack"
+subtitle:   "目前最流行的轻量化打包工具"
+date:       2017-09-14
+author:     "ZhengXC"
+header-img: "img/post-bg-js-version.jpg"
+tags:
+    - 前端开发
+    - JavaScript
+    - 翻译
+---
+
