@@ -10,9 +10,245 @@ tags:
     - 打包工具
 ---
 
-JavaScript 有着很奇怪的命名史。
+## Catagory
 
-1995 年，它作为网景浏览器（Netscape Navigator）的一部分首次发布，网景给这个新语言命名为 LiveScript。一年后，为了搭上当时媒体热炒 Java 的顺风车，临时改名为了 JavaScript *（当然，Java 和 JavaScript 的关系，就和雷锋和雷锋塔一样 —— 并没有什么关系）*
+1. [Foreword](#foreword)
+	
+2. [简单入门](#简单入门)
+	1. [安装webpack](#安装webpack)
+	2. [初始化package.json](#初始化package.json)
+	3. [创建文件夹](#创建文件夹)
+	4. [创建文件](#创建文件)
+	5. [运行webpack](#运行webpack)
+3. [webpack进阶](#webpack进阶)
+	1. [Linux Kernel](#linux-kernel)
+	2. [GNU Project](#gnu-project)
+	3. [Android](#android)
+	4. [Android Kernel](#android-kernel)
+	5. [Android ROM](#android-rom)
+	6. [Chrome OS](#chrome-os)
+	7. [Chromium OS](#chromium-os)
+
+## Foreword
+[跳过废话，直接看进阶部分 ](#build)
+>WebPack可以看做是模块打包机：它做的事情是，分析你的项目结构，找到JavaScript模块以及其它的一些浏览器不能直接运行的拓展语言（Scss，TypeScript等），并将其转换和打包为合适的格式供浏览器使用。
+
+---
+
+## 简单入门
+
+#### 安装webpack
+```
+//全局安装
+npm install -g webpack
+//安装在项目根目录
+npm install --save-dev webpack
+```
+#### 初始化package.json
+`npm init`
+
+#### 创建文件夹
+新建webpack文件夹，在其中再新建app文件夹和public文件夹。
+- app文件夹用来存放原始数据和JavaScript模块。
+- public文件夹用来存放之后供浏览器读取的文件（包括使用webpack打包生成的js文件以及一个index.html文件）。
+
+#### 创建文件
+- index.html --放在public文件夹中;
+- Greeter.js-- 放在app文件夹中;
+- main.js-- 放在app文件夹中;
+
+`index.html`
+```
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+</head>
+<body>
+	<div id="root"></div>
+	<script src="bundle.js"></script>
+</body>
+</html>
+```
+
+`Greeter.js`
+```
+module.exports=function(){
+	var greet=document.createElement('div')
+	greet.textContent="Hi there and greetings!"
+	return greet;
+}
+```
+
+`main.js`
+```
+const greeter=require('./Greeter.js');
+document.querySelector("#root").appendChild(greeter())
+```
+
+#### 运行webpack
+全局安装webpack下
+```
+# {extry file}出填写入口文件的路径，本文中就是上述main.js的路径， 
+# {destination for bundled file}处填写打包文件的存放路径 
+# 填写路径的时候不用添加{} 
+webpack {entry file} {destination for bundled file}
+```
+
+项目目录安装webpack下
+```
+node_modules/.bin/webpack {entry file} {destination for bundled file}
+```
+<p id = "build"></p>
+---
+
+
+## webpack进阶
+
+#### webpack.config.js入门
+```
+module.exports = { 
+	entry: __dirname + "/app/main.js",//已多次提及的唯一入口文件 
+	output: {
+		path: __dirname + "/public",//打包后的文件存放的地方 
+		filename: "bundle.js"//打包后输出文件的文件名 
+	} 
+}
+```
+>注：“__dirname”是node.js中的一个全局变量，它指向当前执行脚本所在的目录。
+
+#### package.json配置
+>当webpack是局部安装的时候，在命令行中输入命令需要代码类似于node_modules/.bin/webpack这样的路径其实是比较烦人的，不过值得庆幸的是npm可以引导任务执行，
+
+```
+{
+  "name": "webpack-test",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "webpack"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "webpack": "^3.5.6"
+  }
+}
+
+```
+>注：package.json中的script会安装一定顺序寻找命令对应位置，本地的node_modules/.bin路径就在这个寻找清单中，所以无论是全局还是局部安装的Webpack，你都不需要写前面那指明详细的路径了。npm的start命令是一个特殊的脚本名称，其特殊性表现在，在命令行中使用npm start就可以执行其对于的命令，如果对应的此脚本名称不是start，想要在命令行中运行时，需要这样用npm run {script name}如npm run build。
+
+#### webpack.config.js深入之Source Maps
+
+|devtool选项|配置结果|
+|------|------|
+|source-map|在一个单独的文件中产生一个完整且功能完全的文件。这个文件具有最好的source map，但是它会减慢打包速度；|
+|cheap-module-source-map|在一个单独的文件中生成一个不带列映射的map，不带列映射提高了打包速度，但是也使得浏览器开发者工具只能对应到具体的行，不能对应到具体的列（符号），会对调试造成不便；|
+|eval-source-map|使用eval打包源文件模块，在同一个文件中生成干净的完整的source map。这个选项可以在不影响构建速度的前提下生成完整的sourcemap，但是对打包后输出的JS文件的执行具有性能和安全的隐患。在开发阶段这是一个非常好的选项，在生产阶段则一定不要启用这个选项；|
+|cheap-module-eval-source-map|这是在打包文件时最快的生成source map的方法，生成的Source Map 会和打包后的JavaScript文件同行显示，没有列映射，和eval-source-map选项具有相似的缺点；|
+
+对小到中型的项目中，在开发阶段，eval-source-map是一个很好的选项。对webpack.config.js配置如下
+```
+module.exports = {
+	devtool: 'eval-source-map', 
+	entry: __dirname + "/app/main.js", 
+	output: { 
+		path: __dirname + "/public", filename: "bundle.js" 
+	} 
+}
+```
+>cheap-module-eval-source-map方法构建速度更快，但是不利于调试，推荐在大型项目考虑时间成本时使用。
+
+#### webpack.config.js深入之构建本地服务器
+```
+npm install --save-dev webpack-dev-server
+```
+
+|devserver的配置选项|功能描述|
+|:------|:------|
+|contentBase|默认webpack-dev-server会为根文件夹提供本地服务器，如果想为另外一个目录下的文件提供本地服务器，应该在这里设置其所在目录（本例设置到“public"目录）|
+|port|设置默认监听端口，如果省略，默认为”8080“|
+|inline|设置为true，当源文件改变时会自动刷新页面|
+|historyApiFallback|在开发单页应用时非常有用，它依赖于HTML5 history API，如果设置为true，所有的跳转将指向index.html|
+
+**把这些命令加到webpack的配置文件中，现在的配置文件webpack.config.js如下所示**
+```
+module.exports = {
+  devtool: 'eval-source-map',
+
+  entry:  __dirname + "/app/main.js",
+  output: {
+    path: __dirname + "/public",
+    filename: "bundle.js"
+  },
+
+  devServer: {
+    contentBase: "./public",//本地服务器所加载的页面所在的目录
+    historyApiFallback: true,//不跳转
+    inline: true//实时刷新
+  } 
+}
+```
+**在package.json中的scripts对象中添加如下命令，用以开启本地服务器**
+```
+"scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "webpack",
+    "server": "webpack-dev-server --open"
+},
+```
+
+#### webpack.config.js深入之Loaders
+###### Babel
+Babel其实是几个模块化的包，其核心功能位于称为babel-core的npm包中，webpack可以把其不同的包整合在一起使用。对于每一个你需要的功能或拓展，你都需要安装单独的包（用得最多的是解析Es6的babel-preset-es2015包和解析JSX的babel-preset-react包）。
+
+
+```
+// npm一次性安装多个依赖模块，模块之间用空格隔开
+npm install --save-dev babel-core babel-loader babel-preset-es2015 babel-preset-react
+```
+
+在webpack配置添加
+```
+module.exports = {
+  devtool: 'eval-source-map',
+
+  entry:  __dirname + "/app/main.js",
+  output: {
+    path: __dirname + "/public",
+    filename: "bundle.js"
+  },
+  devServer: {
+    contentBase: "./public",//本地服务器所加载的页面所在的目录
+    historyApiFallback: true,//不跳转
+    inline: true//实时刷新
+  } 
+	module: { 
+	  rules: [ 
+		  {
+			test: /(\.jsx|\.js)$/, 
+			  use: { 
+				loader: "babel-loader", 
+				options: { 
+				  presets: [ "es2015", "react" ] 
+				} 
+			  },
+			  exclude: /node_modules/ 
+		  } 
+	  ] 
+	}
+}
+```
+
+
+
+参考文献
+[入门Webpack，看这篇就够了](http://www.jianshu.com/p/42e11515c10f)
+[深入浅出React（二）：React开发神器Webpack](http://www.infoq.com/cn/articles/react-and-webpack)
+[webpack超详细配置, 使用教程(图文) ](http://blog.csdn.net/c_kite/article/details/71279853)
+
 
 
 
